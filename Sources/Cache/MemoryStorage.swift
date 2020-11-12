@@ -73,12 +73,17 @@ public enum MemoryStorage {
             storage.totalCostLimit = config.totalCostLimit
             storage.countLimit = config.countLimit
 
-            cleanTimer = .scheduledTimer(withTimeInterval: config.cleanInterval, repeats: true) { [weak self] _ in
-                guard let self = self else { return }
-                self.removeExpired()
+            if #available(iOSApplicationExtension 10.0, *) {
+                cleanTimer = .scheduledTimer(withTimeInterval: config.cleanInterval, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    self.removeExpired()
+                }
+            } else {
+                cleanTimer = .scheduledTimer(timeInterval: config.cleanInterval, target: self, selector: #selector(removeExpired), userInfo: nil, repeats: true)
             }
         }
-
+        
+        @objc
         func removeExpired() {
             lock.lock()
             defer { lock.unlock() }
